@@ -1030,8 +1030,15 @@ where
                 });
         }
 
-        let max_int_secs = core::cmp::max(req.max_int_ceil()?, 40); // Say we need at least 4 secs for potential latencies
         let min_int_secs = req.min_int_floor()?;
+        // Modified for Charker: report at least once a minute. A controller only
+        // notices a restarted publisher after MaxInterval passes without a report,
+        // and Apple Home asks for 600 s. The publisher may pick any MaxInterval
+        // from MinIntervalFloor up to max(SUBSCRIPTION_MAX_INTERVAL_PUBLISHER_LIMIT,
+        // MaxIntervalCeiling).
+        let max_int_secs = core::cmp::max(req.max_int_ceil()?, 40) // Say we need at least 4 secs for potential latencies
+            .min(60)
+            .max(min_int_secs);
 
         let now = Instant::now();
 
